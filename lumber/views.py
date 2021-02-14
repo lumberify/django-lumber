@@ -28,11 +28,9 @@ class LogView(APIView):
         except json.decoder.JSONDecodeError:
             return HttpResponse(status=400)
         app = get_object_or_404(App, pk=dsn)
-        print(body)
         try:
             Handler.handle(app, body)
         except ValueError as value_error:
-            print(f'Failed {str(value_error)}')
             return Response({
                 'status': 'ERROR',
                 'error': str(value_error),
@@ -113,7 +111,6 @@ class LogsApiView(APIView):
         # GET FILTERS
         filters = request.GET.getlist('filters', None)
         parsed = Filter.parse(filters)
-        print(parsed)
         filter = Filter.build(app, parsed)
 
         qs = LogEntry.objects.filter(filter).order_by('-created')

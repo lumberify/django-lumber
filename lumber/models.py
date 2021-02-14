@@ -40,7 +40,7 @@ class LogEntry(BaseModel):
     process = models.PositiveIntegerField(blank=True, null=True, default=None)
     processname = models.CharField(max_length=256, blank=True, null=True, default=None)
     sinfo = models.TextField(blank=True, null=True, default=None) # JSON
-    thread = models.PositiveIntegerField(blank=True, null=True, default=None)
+    thread = models.PositiveBigIntegerField(blank=True, null=True, default=None)
     threadname = models.CharField(max_length=256, blank=True, null=True, default=None)
 
     raw = models.TextField()

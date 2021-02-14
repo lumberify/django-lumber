@@ -7,7 +7,6 @@ from lumber.models import App, LogEntry
 class Handler:
     @classmethod
     def handle(cls, app: App, payload: dict):
-        print(type(payload))
         if not isinstance(payload, dict):
             raise ValueError('Invalid payload (E001)')
         if 'records' not in payload:
@@ -36,4 +35,3 @@ class Handler:
             threadname=record['threadName'],
             raw=json.dumps(record),
         )
-        print(f'Created {entry.id}')
