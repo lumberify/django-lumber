@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, render
 from django.http.response import Http404, HttpResponse
 from django.views.generic.base import View
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 
 from rest_framework import authentication, permissions, serializers, status
 from rest_framework.decorators import api_view, permission_classes
@@ -58,6 +59,44 @@ class AppsApiView(APIView):
         return Response(response)
 
 
+class Filter:
+    LEVEL = 'level'
+
+    IN = 'in'
+
+    def __init__(self, column, operand, value):
+        self.column = column
+        self.operand = operand
+        self.value = value
+
+    def __repr__(self) -> str:
+        return f'{self.column} {self.operand} "{self.value}"'
+
+    @classmethod
+    def parse(cls, filters):
+        parsed = []
+        for entry in filters:
+            parts = entry.split(',')
+            column = parts.pop(0)
+            operand = parts.pop(0)
+            value = ','.join(parts)
+            if column not in [Filter.LEVEL]:
+                raise ValueError(f'Invalid column {column}')
+            if operand not in [Filter.IN]:
+                raise ValueError(f'Invalid operand {operand}')
+            parsed.append(Filter(column, operand, value))
+        return parsed
+
+    @classmethod
+    def build(cls, app:App, parsed):
+        filter = Q(app=app)
+        for entry in parsed:
+            if entry.column == Filter.LEVEL:
+                if entry.operand == Filter.IN:
+                    filter = filter & Q(level__in=entry.value.split(','))
+        return filter
+
+
 class LogsApiView(APIView):
     authentication_classes = [authentication.SessionAuthentication]
     permission_classes = [permissions.IsAuthenticated]
@@ -71,10 +110,16 @@ class LogsApiView(APIView):
         limit = int(request.GET.get('limit', 500))
         end = offset + limit
 
+        # GET FILTERS
+        filters = request.GET.getlist('filters', None)
+        parsed = Filter.parse(filters)
+        print(parsed)
+        filter = Filter.build(app, parsed)
+
+        qs = LogEntry.objects.filter(filter).order_by('-created')
         response = {}
         response['status'] = 'OK'
         response['records'] = []
-        qs = LogEntry.objects.filter(app=app).order_by('-created')
         response['total'] = len(qs)
         response['size'] = limit
         for entry in qs[offset:end]:
@@ -87,7 +132,9 @@ class LogsApiView(APIView):
                 'name': entry.name,
                 'pathname': entry.pathname,
                 'process': entry.process,
+                'processname': entry.processname,
                 'thread': entry.thread,
+                'threadname': entry.threadname,
                 'created': entry.created,
             })
         return Response(response)

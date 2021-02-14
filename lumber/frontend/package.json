@@ -16,15 +16,19 @@
     "bootstrap": "^4.5.3",
     "goober": "^2.0.30",
     "moment": "^2.29.1",
+    "query-string": "^6.14.0",
+    "rc-picker": "^2.5.5",
     "react": "^16.8.0",
     "react-bootstrap": "^1.4.0",
-    "react-dom": "^16.8.0"
+    "react-dom": "^16.8.0",
+    "react-select": "^4.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
     "@babel/preset-react": "^7.12.10",
     "@types/react": "^16.8.0",
     "@types/react-dom": "^16.8.0",
+    "@types/react-select": "^4.0.13",
     "babel-loader": "^8.2.2",
     "css-loader": "^5.0.1",
     "source-map-loader": "^2.0.0",

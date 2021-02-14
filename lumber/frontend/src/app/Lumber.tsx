@@ -2,8 +2,11 @@ import * as React from 'react';
 import { Badge, Col, Container, OverlayTrigger, Popover, Row } from 'react-bootstrap';
 import { FaCookieBite } from "@react-icons/all-files/fa/FaCookieBite";
 import { FaFilter } from "@react-icons/all-files/fa/FaFilter";
+import Select from 'react-select'
+import { OptionProps } from 'react-select/src/types';
 
 const moment = require('moment')
+const queryString = require('query-string');
 
 class App {
     id: string
@@ -19,7 +22,9 @@ class Record {
     name: string
     pathname: string
     process: number
+    processname: string
     thread: number
+    threadname: string
     created: Date
 }
 
@@ -32,6 +37,8 @@ type State = {
     offset: number,
     size: number,
     total: number,
+    showFilters: boolean,
+    filters: Array<Filter>,
 }
 
 export default class Lumber extends React.Component<Props, State> {
@@ -44,18 +51,40 @@ export default class Lumber extends React.Component<Props, State> {
             size: 0,
             total: 0,
             app: '',
+            showFilters: false,
+            filters: [],
         }
     }
 
     componentDidUpdate(prevPros: Props, prevState: State) {
+        const app = this.state.apps.filter((rhs) => this.state.app == rhs.id)[0]
         if (prevState.app != this.state.app) {
-            const app = this.state.apps.filter((rhs) => this.state.app == rhs.id)[0]
+            this.setState({
+                records: [],
+                total: 0,
+                size: 0,
+            })
+            this.fetchLogs(app, 0)
+        } else if (prevState.filters != this.state.filters) {
+            this.setState({
+                records: [],
+                total: 0,
+                size: 0,
+            })
+
             this.fetchLogs(app, 0)
         }
     }
 
     fetchLogs(app: App, offset: number) {
-        const url = '/lumber/api/logs/' + app.id + '?offset=' + offset.toString()
+        const filters = this.state.filters.map((filter) => {
+            return filter.column + ',' + filter.operand + ',' + filter.value
+        })
+        const search = queryString.stringify({
+            'offset': offset,
+            'filters': filters, //['level,in,10'],
+        })
+        const url = '/lumber/api/logs/' + app.id + '?' + search
         fetch(url)
             .then(response => {
                 if (response.status >= 400) {
@@ -121,6 +150,21 @@ export default class Lumber extends React.Component<Props, State> {
 
     }
 
+    onFiltersUpdated(filters: Array<Filter>) {
+        this.setState({
+            filters: filters,
+        })
+    }
+
+    handleToggleFilter(event: React.MouseEvent<HTMLAnchorElement>) {
+        event.preventDefault()
+        this.setState((state) => {
+            return {
+                showFilters: !state.showFilters,
+            }
+        })
+    }
+
     componentDidMount() {
         this.fetchApps()
     }
@@ -143,11 +187,16 @@ export default class Lumber extends React.Component<Props, State> {
                                 </select>
                             </Col>
                             <Col sm={1} className="mr-2 pt-1">
-                                <FaFilter />
+                                <a href="#" onClick={this.handleToggleFilter.bind(this)}><FaFilter /></a>
                             </Col>
                         </Row>
                     </Col>
                 </Row>
+                { this.state.showFilters &&
+                    <Row className="mb-2">
+                        <Col><FilterBar filters={this.state.filters} onFiltersUpdated={this.onFiltersUpdated.bind(this)} /></Col>
+                    </Row>
+                }
                 <Row>
                     <Col>
                         {this.state.records.map((record, index) => {
@@ -193,11 +242,11 @@ class RecordRow extends React.Component<RecordRowProps> {
                             </tr>
                             <tr>
                                 <td>Process</td>
-                                <td>{this.props.record.process}</td>
+                                <td>{this.props.record.processname} ({this.props.record.process})</td>
                             </tr>
                             <tr>
                                 <td>Thread</td>
-                                <td>{this.props.record.thread}</td>
+                                <td>{this.props.record.threadname} ({this.props.record.thread})</td>
                             </tr>
                         </tbody>
                     </table>
@@ -242,5 +291,89 @@ class LogLevel extends React.Component<LogLevelProps> {
             case 50:
                 return <Badge pill variant="danger">C</Badge>
         }
+    }
+}
+
+enum Column {
+    None = '',
+    Level = 'level',
+}
+
+enum Operand {
+    None = '',
+    In = 'in',
+}
+
+class Filter {
+    column: Column
+    operand: Operand
+    value: Object
+
+    constructor(column: Column, operand: Operand, value: Object) {
+        this.column = column
+        this.operand = operand
+        this.value = value
+    }
+}
+
+type FilterBarProps = {
+    filters: Array<Filter>,
+    onFiltersUpdated: (filters: Array<Filter>) => void,
+}
+
+type LevelOption = {
+    value: number,
+    label: string,
+}
+
+function levelName(level: number) {
+    switch (level) {
+        case 10: return 'Debug'
+        case 20: return 'Info'
+        case 30: return 'Warning'
+        case 40: return 'Error'
+        case 50: return 'Critical'
+    }
+}
+
+class FilterBar extends React.Component<FilterBarProps> {
+    handleLevelChange(selected: Array<OptionProps>) {
+        const filters = this.props.filters.filter((filter) => filter.column != Column.Level)
+        if (selected.length > 0) {
+            filters.push(
+                new Filter(Column.Level, Operand.In, selected.map((option) => option.value).join(',')),
+            )
+        }
+        this.props.onFiltersUpdated(filters)
+    }
+
+    render() {
+        console.log('Filter', this.props.filters)
+        let levelValue: Array<LevelOption> = []
+        // Convert the provided filters, into values for the different columns
+        for (let filter of this.props.filters) {
+            if (filter.column == Column.Level) {
+                // Set the levelValue
+                levelValue = (filter.value as string).split(',').map((level) => { return { value: parseInt(level), label: levelName(parseInt(level)) } })
+            }
+        }
+
+        // const levelValue = this.state.levels.map((level) => { return {value: level.value, label: level.label}} )
+        const levelOptions: Array<LevelOption> = [
+            { value: 10, label: levelName(10) },
+            { value: 20, label: levelName(20) },
+            { value: 30, label: levelName(30) },
+            { value: 40, label: levelName(40) },
+            { value: 50, label: levelName(50) },
+        ]
+        return (
+            <Row>
+                <Col sm={3}>
+                    { /* Level */}
+                    <Select options={levelOptions} isMulti value={levelValue} onChange={this.handleLevelChange.bind(this)} />
+                    <small className="text-muted">Level</small>
+                </Col>
+            </Row>
+        )
     }
 }

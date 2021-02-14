@@ -8,6 +8,7 @@
         "removeComments": true,
         "sourceMap": true,
         "target": "ES5",
+        "esModuleInterop": true,
     },
     "include": [
         "./src/**/*",
