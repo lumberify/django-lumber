@@ -16,7 +16,7 @@ class Handler:
 
     @classmethod
     def handle_record(cls, app: App, record: dict):
-        entry = LogEntry.objects.create(
+        _ = LogEntry.objects.create(
             app=app,
             args=json.dumps(record['args']) if record['args'] else None,
             created=timezone.make_aware(datetime.fromtimestamp(record['created'])),

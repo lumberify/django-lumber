@@ -8,10 +8,55 @@ import struct
 import sys
 import os
 import requests
-import json
+import queue
 
+from threading import Thread
 from optparse import OptionParser
 
+class Sender(Thread):
+    def __init__(self, dsn, queue, timeout=5, threshold=100):
+        Thread.__init__(self)
+        self.dsn = dsn
+        self.queue = queue
+        self.pending = []
+        self.timeout = timeout
+        self.threshold = threshold
+
+    def run(self):
+        while True:
+            try:
+                record = self.queue.get(timeout=self.timeout)
+                self.pending.append(record)
+                if len(self.pending) > self.threshold:
+                    self.flush()
+            except queue.Empty:
+                if len(self.pending) > 0:
+                    self.flush()
+
+    def flush(self):
+        payload = {'records':[]}
+        while len(self.pending) > 0:
+            record = self.pending.pop(0)
+            payload['records'].append({
+                'args': record.args,
+                'created': record.created,
+                'exc_info': record.exc_info,
+                'funcName': record.funcName,
+                'level': record.levelno,
+                'lineno': record.lineno,
+                'message': record.message if hasattr(record, 'message') else None, # interpreted
+                'msg': record.msg,
+                'name': record.name,
+                'pathname': record.pathname,
+                'process': record.process,
+                'processName': record.processName,
+                'sinfo': record.stack_info,
+                'thread': record.thread,
+                'threadName': record.threadName,
+            })
+        self.pending = []
+        if len(payload['records']) > 0:
+            requests.post(self.dsn, json=payload)
 
 class LogRecordStreamHandler(socketserver.StreamRequestHandler):
     """Handler for a streaming logging request.
@@ -49,26 +94,7 @@ class LogRecordStreamHandler(socketserver.StreamRequestHandler):
         # to do filtering, do it at the client end to save wasting
         # cycles and network bandwidth!
         logger.handle(record)
-        payload = {
-            'records': [{
-                'args': record.args,
-                'created': record.created,
-                'exc_info': record.exc_info,
-                'funcName': record.funcName,
-                'level': record.levelno,
-                'lineno': record.lineno,
-                'message': record.message if hasattr(record, 'message') else None, # interpreted
-                'msg': record.msg,
-                'name': record.name,
-                'pathname': record.pathname,
-                'process': record.process,
-                'processName': record.processName,
-                'sinfo': record.stack_info,
-                'thread': record.thread,
-                'threadName': record.threadName,
-            }],
-        }
-        requests.post(self.server.dsn, json=payload)
+        self.server.queue.put(record)
 
 
 class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
@@ -87,6 +113,9 @@ class LogRecordSocketReceiver(socketserver.ThreadingTCPServer):
         self.abort = 0
         self.timeout = 1
         self.dsn = dsn
+        self.queue = queue.Queue()
+        self.sender = Sender(self.dsn, self.queue)
+        self.sender.start()
 
     def serve_until_stopped(self):
         abort = 0
@@ -126,7 +155,7 @@ def main():
     handlers = []
     if options.verbose:
         print('Logging to standart output')
-        console = logging.StreamHandler(sys.stdout)
+        console = logging.StreamHandler()
         console.setFormatter(short)
         console.setLevel(logging.INFO)
         handlers.append(console)
