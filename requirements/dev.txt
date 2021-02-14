@@ -1,0 +1,6 @@
+-r base.txt
+
+pylint-django
+autopep8
+django-debug-toolbar
+coverage

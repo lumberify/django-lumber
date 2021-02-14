@@ -1,0 +1,7 @@
+argon2-cffi
+django
+dj-database-url
+django-dotenv
+djangorestframework
+django-axes
+requests
