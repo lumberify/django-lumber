@@ -28,19 +28,19 @@ class App(BaseModel):
 class LogEntry(BaseModel):
     app = models.ForeignKey(App, on_delete=models.CASCADE)
     args = models.TextField(blank=True, null=True, default=None)  # JSON
-    created = models.DateTimeField()
+    created = models.DateTimeField(db_index=True)
     excinfo = models.TextField(blank=True, null=True, default=None)  # JSON
-    funcname = models.CharField(max_length=128)
-    level = models.PositiveIntegerField()
-    lineno = models.PositiveIntegerField()
-    message = models.TextField(blank=True, null=True, default=None)
-    msg = models.TextField()
-    name = models.CharField(max_length=128)
-    pathname = models.CharField(max_length=1024)
-    process = models.PositiveIntegerField(blank=True, null=True, default=None)
+    funcname = models.CharField(max_length=128, db_index=True)
+    level = models.PositiveIntegerField(db_index=True)
+    lineno = models.PositiveIntegerField(db_index=True)
+    message = models.TextField(blank=True, null=True, default=None, db_index=True)
+    msg = models.TextField(db_index=True)
+    name = models.CharField(max_length=128, db_index=True)
+    pathname = models.CharField(max_length=1024, db_index=True)
+    process = models.PositiveIntegerField(blank=True, null=True, default=None, db_index=True)
     processname = models.CharField(max_length=256, blank=True, null=True, default=None)
     sinfo = models.TextField(blank=True, null=True, default=None) # JSON
-    thread = models.PositiveBigIntegerField(blank=True, null=True, default=None)
+    thread = models.PositiveBigIntegerField(blank=True, null=True, default=None, db_index=True)
     threadname = models.CharField(max_length=256, blank=True, null=True, default=None)
 
     raw = models.TextField()
