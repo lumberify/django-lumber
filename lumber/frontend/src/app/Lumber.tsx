@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Badge, Col, Container, OverlayTrigger, Popover, Row } from 'react-bootstrap';
-import { FaCookieBite } from "@react-icons/all-files/fa/FaCookieBite";
+import { FaTree } from "@react-icons/all-files/fa/FaTree";
 import { FaFilter } from "@react-icons/all-files/fa/FaFilter";
 import Select from 'react-select'
 import { OptionProps } from 'react-select/src/types';
@@ -173,7 +173,7 @@ export default class Lumber extends React.Component<Props, State> {
         return (
             <Container fluid>
                 <Row>
-                    <Col><h1 className="font-weight-bolder"><FaCookieBite /> Lumber</h1></Col>
+                    <Col><h1 className="font-weight-bolder"><FaTree /> Lumber</h1></Col>
 
                     <Col className="text-right pt-2" sm={2}>
                         <Row>
