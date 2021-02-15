@@ -9,7 +9,7 @@ Lumber is a log aggregating facility. It is made of two components, an agent tha
 This repository contains the server side. It is a Django application and can be deployed as such.
 
 ```
-$ git clone https://github.com/poitch/django-lumber.git
+$ git clone https://github.com/lumberify/django-lumber.git
 $ cd django-lumber
 $ virtualenv venv -p python3.8
 $ source venv/bin/activate
