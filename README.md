@@ -77,3 +77,26 @@ $ ./agent -d <dsn>
 ```
 
 You can optionally specify a `-f <filename>` to also send the local logs to a file, or even use `-v` to have logs sent the standard err.
+
+### Sending logs
+
+Now you can configure your python application to send logs to the agent by using the `logging.handlers.SocketHandler`
+
+```
+{
+    'version': 1,
+    'handlers': {
+    'lumber': {
+        'class': 'logging.handlers.SocketHandler',
+        'host': 'localhost',
+        'port': 9020,
+    },
+    'loggers': {
+        '': {
+            'handlers': ['lumber'],
+            'level': 'INFO',
+        },
+    },
+ },
+```
+
