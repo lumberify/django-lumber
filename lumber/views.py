@@ -105,7 +105,7 @@ class LogsApiView(APIView):
             raise Http404
 
         offset = int(request.GET.get('offset', 0))
-        limit = int(request.GET.get('limit', 500))
+        limit = int(request.GET.get('limit', 100))
         end = offset + limit
 
         # GET FILTERS

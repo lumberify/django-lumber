@@ -93,7 +93,6 @@ export default class Lumber extends React.Component<Props, State> {
                 return response.json()
             })
             .then(response => {
-                console.log(response)
                 this.setState((state) => {
                     const records = state.records
                     records.push(...response.records)
@@ -119,7 +118,6 @@ export default class Lumber extends React.Component<Props, State> {
                 return response.json()
             })
             .then(response => {
-                console.log(response)
                 this.setState((state) => {
                     let app = ''
                     if (response.apps.length > 0) {
@@ -348,7 +346,6 @@ class FilterBar extends React.Component<FilterBarProps> {
     }
 
     render() {
-        console.log('Filter', this.props.filters)
         let levelValue: Array<LevelOption> = []
         // Convert the provided filters, into values for the different columns
         for (let filter of this.props.filters) {
