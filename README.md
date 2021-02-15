@@ -69,7 +69,7 @@ The agent listens to port 9020 by default but can be configured to any port. It 
 On each machines running the application you want to collect logs for, simply checkout the repository and run the agent.
 
 ```
-$ git clone https://github.com/poitch/django-lumber.git
+$ git clone https://github.com/lumberify/django-lumber.git
 $ cd django-lumber
 $ virtualenv venv -p python3.8
 $ pip install -r requirements/prod.txt
