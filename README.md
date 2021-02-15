@@ -26,6 +26,19 @@ $ python -c 'from django.core.management.utils import get_random_secret_key; pri
 
 Optionally you might need to set a `DATABASE_URL` to configure where to store log files.
 
+```
+$ python manage.py migrate
+```
+
+We need to also compile the UI, make sure to have the latest node installed.
+
+```
+$ cd lumber/frontend
+$ NODE_ENV=production npx webpack --config webpack.config.js
+$ cd ../..
+$ python manage.py collectstatic
+```
+
 At this point you can just run the application using gunicorn
 ```
 $ gunicorn prj.wsgi --name lumber --workers 3 --log-level=info --access-logfile - --bind unix:lumber.sock
