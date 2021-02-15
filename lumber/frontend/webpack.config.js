@@ -1,11 +1,14 @@
 const path = require('path')
 const webpack = require('webpack')
+
+const IS_DEV = (process.env.NODE_ENV || 'development') === 'development';
+
 module.exports = {
     // Where Webpack looks to load your JavaScript
     entry: {
         app: path.resolve(__dirname, 'src/app/index.tsx'),
     },
-    mode: 'development',
+    mode: IS_DEV ? 'development' : 'production',
     // Where Webpack spits out the results (the myapp static folder)
     output: {
         path: path.resolve(__dirname, '../static/lumber/build/'),
